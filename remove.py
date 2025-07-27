@@ -12,14 +12,19 @@ def remove_background():
         return 'No image uploaded', 400
 
     file = request.files['image']
-    input_image = Image.open(file.stream).convert("RGBA")
-    output_image = remove(input_image)
+    try:
+        input_image = Image.open(file.stream).convert("RGBA")
+        input_image = input_image.resize((512, 512))  # reduce memory usage
+        output_image = remove(input_image)
 
-    buffer = io.BytesIO()
-    output_image.save(buffer, format='PNG')
-    buffer.seek(0)
+        buffer = io.BytesIO()
+        output_image.save(buffer, format='PNG')
+        buffer.seek(0)
 
-    return send_file(buffer, mimetype='image/png')
+        return send_file(buffer, mimetype='image/png', download_name='cleaned.png')
+    except Exception as e:
+        return f"Error during processing: {str(e)}", 500
+
 
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))  # Render uses PORT env var
